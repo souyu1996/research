@@ -1,6 +1,7 @@
 import random
 from random import choice
 import copy
+import unittest
 
 class Poker:
     def __init__(self):
@@ -31,20 +32,17 @@ class Poker:
         print(self.state)
 
     def state_update(self,action,player):
-        if (not self.player_state[player]) and self.state[player] == []:
-
-            self.player_state[player] = True
-            return
-        elif self.player_state[player]:
+        if self.state[player]==[]:
+        #    print(self.player_state)
             return
         action0 = list(str(action))
         state = [str(i) for i in self.state[player]]
         if self.is_subset(action0, state):
             for i in action0:
                 self.state[player].remove(int(i))
-        if self.state[player] == []:
-            if not self.state[player]:
-                print("Player " + str(player) + " plays out his cards!")
+        if  self.state[player]==[]:
+            print("Player " + str(player) + " plays out his cards!")
+        print("now players' state:",self.state)
 
     def is_subset(self,l,r):
         a=copy.deepcopy(l)
@@ -59,6 +57,9 @@ class Poker:
 
     def is_accessible(self,action):  ##action是否可行   playing rule
         diff=action-self.history[1]
+        print("diff:",diff)
+        if self.history[1]==0:
+            return True
         if  1<=self.history[1]<=9 and 1<=action<=9:
             if 1<=diff<=8:
                 return True
@@ -72,43 +73,50 @@ class Poker:
             return False
 
     def possible_action(self,player):
-        if player==self.history[0] or self.history[0]=='':
-            self.action_profile=self.action_set[1:]
+        if player == self.history[0] or self.history[0] == '':
+            self.action_profile = self.action_set[1:]
         else:
-            if self.history[1] in self.action_profile:
-                action_index = self.action_profile.index(self.history[1])
-            else:
-                action_index=-1
-            a=[]
-            for i in range(action_index+1,len(self.action_profile)):
-                if self.is_accessible(self.action_profile[i]):
-                    a.append(self.action_profile[i])
-            self.action_profile=a
+            action_index = self.action_set.index(self.history[1])
+            print("index:",action_index)
+            a = []
+            for i in range(action_index + 1, len(self.action_set)):
+                print("actions set:",self.action_set[i])
+                if self.is_accessible(self.action_set[i]):
+                    a.append(self.action_set[i])
+            self.action_profile = a
+        print(self.action_profile)
+
 
     def action_update(self,player):
         self.possible_action(player)
         action=[]
         state = self.state[player]
-        state=[str(i) for i in state]
+        state0=[str(i) for i in state]
         for i in range(len(self.action_profile)):
             l = list(str(self.action_profile[i]))
-            if self.is_subset(l,state):
+            if self.is_subset(l,state0):
                 action.append(self.action_profile[i])
         if player!=self.history[0] and self.history[0]!='':
             action.append(0)
         self.possible_actions=action
+        print("now available actions",self.possible_actions)
 
+    def simulate(self):
+        pass
 
     def history_update(self,action,player):
         if self.history[0] == player and action == 0:
             self.history[0] = ''
             self.history[1] = 0
-        elif self.history[0] == '' and action == 0 and self.card_state[player] == []:
+        elif self.history[0] == '' and action == 0 and self.state[player] == []:
             self.history[0] = ''
-        elif self.history[0] == '' or self.is_accessible(action) or self.history[0] == player and action != 0:
+        elif self.history[0] == '' and action!=0 or self.is_accessible(action) or self.history[0] == player and action != 0:
             self.history[0] = player
             self.history[1] = action
         self.history[2].append(action)
+        print("now playing history:",self.history)
+        if self.history[0]!='' and self.history[1]==0:
+            exit()
 
     def update(self,action,player):
         self.state_update(action, player)
@@ -131,6 +139,7 @@ class Poker:
         self.init_game()
         pl={}
         ai=MCCFR(poker)
+        human=Human(poker)
         rand0=Random(poker)
         rand1=Random(poker)
         rand2=Random(poker)
@@ -143,7 +152,6 @@ class Poker:
             player=self.get_player()
             print("now playing player:"+player)
             self.action_update(player)
-            print(self.possible_actions)
             if self.possible_actions==[] or self.possible_actions==[0]:
                 action=0
             else:
@@ -154,11 +162,13 @@ class Poker:
             self.update(action,player)
             end=self.is_win(player)
             if end:
+                print("Player "+str(player)+"'s team wins!")
+
                 if self.reward['A']>0:
+                    print(self.reward)
                     return 1
                 else:
                     return 0
-                print("Player "+str(player)+"'s team wins!")
                 break
 
     def is_win(self,player):
@@ -166,23 +176,33 @@ class Poker:
         opponent1=self.players[(index+1)%4]
         partner=self.players[(index+2)%4]
         opponent2=self.players[(index+3)%4]
-        if self.state[player]==[] and self.state[partner]==[]:
-            if self.state[opponent1]!=[] and self.state[opponent2]!=[]:
-                self.reward[player]=1.5
-                self.reward[partner]=2.5
-                self.reward[opponent2]=self.reward[opponent1]=-2
+        if self.state[player] == [] and self.state[partner] == []:
+            if self.state[opponent1] != [] and self.state[opponent2] != []:
+                print("aaa")
+                self.reward[player] = 2    #1.5
+                self.reward[partner] = 2   #2.5
+                self.reward[opponent2] = self.reward[opponent1] = -2
                 return True
-            elif self.state[opponent1]==[] or self.state[opponent2]==[]:
-                self.reward[player]=0.5
-                self.reward[partner]=1.5
-                self.reward[opponent1]=self.reward[opponent2]=-1
+            elif self.state[opponent1] == [] or self.state[opponent2] == []:
+                print("bbb")
+                self.reward[player] = 1    #0.5
+                self.reward[partner] = 1        #1.5
+                self.reward[opponent1] = self.reward[opponent2] = -1
+                return True   #self.player?player
+        elif self.state[opponent1]==[] and self.state[opponent2]==[]:
+            if self.state[player]!=[] and self.state[partner]!=[]:
+                self.reward[player]=self.reward[partner]=-2
+                self.reward[opponent2]=self.reward[opponent1]=2
                 return True
-        return False
+            elif self.state[player]==[] or self.state[partner]==[]:
+                self.reward[player]=self.reward[partner]=-1
+                self.reward[opponent1]=self.reward[opponent2]=1
+                return True
+        else:
+            return False
 
     def action_print(self,action,player):
         print('{player}:{action}'.format(player=player,action=action))
-        print(self.history)
-        print(self.state)
 
 class Random:
         def __init__(self,poker):
@@ -201,6 +221,21 @@ class Random:
         def __str__(self):
             return "Random Player"
 
+class Human:
+    def __init__(self,poker):
+        self.poker=poker
+
+    def get_action(self):
+        actions=self.poker.possible_actions
+        print(actions)
+        print("Your turn!!!")
+        souyu=int(input())
+        for i in range(len(actions)):
+            if actions[i]==souyu:
+                break
+            elif i>=len(actions)-1:
+                exit()
+        return souyu
 
 class MCCFR:
         def __init__(self, poker):
@@ -213,51 +248,47 @@ class MCCFR:
             self.reward={}
 
         class Node:
-            def __init__(self,actions):  #actions
+            def __init__(self,num):  #actions
                 self.infoSet = None
-                self.regretSum = {}
-                self.strategy = {}
-                self.strategySum = {}
-                self.possible_actions=actions
+
+                self.num=num
+                self.regretSum = [0 for i in range(self.num)]
+                self.strategy = [0 for i in range(self.num)]
+                self.strategySum = [0 for i in range(self.num)]
+            #    self.possible_actions=copy.deepcopy(actions)
+            #    self.num=len(self.possible_actions)
 
             def getStrategy(self, weight):
                 normalizingSum = 0
-                action_num=len(self.possible_actions)
-                if not self.infoSet in self.strategy:
-                    self.strategy[self.infoSet]=[0 for i in range(action_num)]
-                if not self.infoSet in self.regretSum:
-                    self.regretSum[self.infoSet]=[0 for i in range(action_num)]
-                if not self.infoSet in self.strategySum:
-                    self.strategySum[self.infoSet]=[0 for i in range(action_num)]
-                for i in range(action_num):
-                    if self.regretSum[self.infoSet][i]>0:
-                        self.strategy[self.infoSet][i]=self.regretSum[self.infoSet][i]
+                for i in range(self.num):
+                    if self.regretSum[i]>0:
+                        self.strategy[i]=self.regretSum[i]
                     else:
-                        self.strategy[self.infoSet][i]=0
-                    normalizingSum+=self.strategy[self.infoSet][i]
-                for i in  range(action_num):
+                        self.strategy[i]=0
+                    normalizingSum+=self.strategy[i]
+                for i in  range(self.num):
                     if normalizingSum>0:
-                        self.strategy[self.infoSet][i]/=normalizingSum
+                        self.strategy[i]/=normalizingSum
                     else:
-                        self.strategy[self.infoSet][i]=1.0/action_num
-                    self.strategySum[self.infoSet][i]=weight*self.strategy[self.infoSet][i]
-                return self.strategy[self.infoSet]
+                        self.strategy[i]=1.0/self.num
+                    self.strategySum[i]=weight*self.strategy[i]
+                return self.strategy
 
 
             def getAverageStrategy(self):            #根据每个信息集汇总还是根据整个游戏的发生概率？
-                action_num=len(self.possible_actions)
-                avgStrategy = [0 for i in range(action_num)]
+            #    action_num=len(self.possible_actions)
+                avgStrategy = [0 for i in range(self.num)]
                 normalizingSum = 0
-                for i in range(action_num):
-                    normalizingSum += self.strategySum[self.infoSet][i]
-                for i in range(action_num):
+                for i in range(self.num):
+                    normalizingSum += self.strategySum[i]
+                for i in range(self.num):
                     if normalizingSum > 0:
-                        avgStrategy[i] = self.strategySum[self.infoSet][i] / normalizingSum
+                        avgStrategy[i] = self.strategySum[i] / normalizingSum
                     else:
-                        avgStrategy[i] = 1.0 / action_num
+                        avgStrategy[i] = 1.0 / self.num
                 return avgStrategy
 
-        def card_init(self):  ##发牌                  发牌可能存在失误？？？
+        def card_init(self):  ##发牌
             states = {}
             self.history = copy.deepcopy(self.history_init)
             #history=self.history[2]
@@ -307,6 +338,9 @@ class MCCFR:
 
         def is_accessible(self, action):  ##action是否可行   playing rule
             diff = action - self.history[1]
+            print("diff:",diff)
+            if self.history[1]==0:
+                return True
             if 1 <= self.history[1] <= 9 and 1 <= action <= 9:
                 if 1 <= diff <= 8:
                     return True
@@ -316,11 +350,11 @@ class MCCFR:
             elif 111 <= self.history[1] <= 999 and 111 <= action <= 999:
                 if diff % 111 == 0 and 9 > diff // 111 > 0:
                     return True
-            else:
-                return False
 
-        def is_subset(self, l, r):
+            return False
 
+        def is_subset(self, l, r0):
+            r=copy.deepcopy(r0)
             for i in range(len(l)):
                 if l[i] in r:
                     r.remove(l[i])
@@ -330,7 +364,8 @@ class MCCFR:
                     return False
 
         def card_update(self, action, player):
-            if self.player_state[player]:
+            if self.card_state[player]==[]:
+                print(self.player_state)
                 return
             action0 = list(str(action))
             state = [str(i) for i in self.card_state[player]]
@@ -338,53 +373,60 @@ class MCCFR:
                 for i in action0:
                     self.card_state[player].remove(int(i))
             self.player_state_update(player)
-            if  self.player_state[player]:
+            if  self.card_state[player]==[]:
                 print("Player " + str(player) + " plays out his cards!")
+            print("now playing state is:",self.card_state)
                # self.player_state[player] = True
+
         def player_state_update(self,player):
             if self.card_state[player]==[]:
                 self.player_state[player]=True
+
         def possible_action(self, player):
             if player == self.history[0] or self.history[0] == '':
                 self.action_profile = self.action_set[1:]
             else:
-                if self.history[1] in self.action_profile:
-                    action_index = self.action_profile.index(self.history[1])
-                else:
-                    action_index = -1
+                action_index = self.action_set.index(self.history[1])
                 a = []
-                for i in range(action_index + 1, len(self.action_profile)):
-                    if self.is_accessible(self.action_profile[i]):
-                        a.append(self.action_profile[i])
+                for i in range(action_index + 1, len(self.action_set)):
+                    if self.is_accessible(self.action_set[i]):
+                        a.append(self.action_set[i])
                 self.action_profile = a
+            print("now action profile is:",self.action_profile)
 
         def action_update(self, player):
             self.possible_action(player)
             action = []
             state = self.card_state[player]
-            state = [str(i) for i in state]
+            state0 = [str(i) for i in state]
             for i in range(len(self.action_profile)):
                 l = list(str(self.action_profile[i]))
-                if self.is_subset(l, state):
+                if self.is_subset(l, state0):
                     action.append(self.action_profile[i])
             if player!=self.history[0] and self.history[0]!='':
                 action.append(0)
             self.actions = action
+            print("now available actions:",self.actions)
 
         def history_update(self, action, player):
-            #if self.player_state[player] and self.history[0]==player:
-            #    self.history[0]=''
-            if self.history[0]==player and action==0:
+            if self.history[1]==0 and action==0:
+                self.history[0]=''
+            elif self.history[0]==player and action==0:
                 self.history[0]=''
                 self.history[1]=0
             elif self.history[0]=='' and action==0 and self.card_state[player]==[]:
                 self.history[0]=''
-            elif self.history[0] == '' or self.is_accessible(action) or self.history[0] == player and action!=0:
+            elif self.history[0] == '' and action!=0 or self.is_accessible(action) or self.history[0] == player and action!=0:
                 self.history[0] = player
                 self.history[1] = action
             self.active_action.append(self.history[1])
             self.active_player.append(self.history[0])
             self.history[2].append(action)
+            print("now active action set:",self.active_action)
+            print("now active player set:",self.active_player)
+            print("now playing history:", self.history)
+            if self.history[0] != '' and self.history[1] == 0:
+                exit()
 
         def next_player(self):
             p=self.play_order.pop(0)
@@ -398,63 +440,79 @@ class MCCFR:
                     self.reward[player] = 2    #1.5
                     self.reward[partner] = 2   #2.5
                     self.reward[opponent2] = self.reward[opponent1] = -2
+                    print("player ",player,"'s team wins!!!")
                     return True
                 elif self.card_state[opponent1] == [] or self.card_state[opponent2] == []:
                     print("bbb")
                     self.reward[player] = 1    #0.5
                     self.reward[partner] = 1        #1.5
                     self.reward[opponent1] = self.reward[opponent2] = -1
+                    print("player ",player,"'s team wins!!!")
                     return True   #self.player?player
+            elif self.card_state[opponent1]==[] and self.card_state[opponent2]==[]:
+                if self.card_state[player]!=[] and self.card_state[partner]!=[]:
+                    self.reward[player]=self.reward[partner]=-2
+                    self.reward[opponent2]=self.reward[opponent1]=2
+                    print("player ",opponent1,"'s team wins!!!")
+                    return True
+                elif self.card_state[player]==[] or self.card_state[partner]==[]:
+                    self.reward[player]=self.reward[partner]=-1
+                    self.reward[opponent1]=self.reward[opponent2]=1
+                    print("player ",opponent2,"'s team wins!!!")
+                    return True
             else:
                 return False
 
         def train(self, iterations):
             util = 0
             for i in range(iterations):
-                print("TRUN  "+str(i+1))
+                print("Simulation  TRUN  "+str(i+1))
                 self.card_state = self.card_init()
     #            print(self.card_state)
                 self.visited_action=[]
-                self.active_action=[]
-                self.active_player=[]
+                self.active_action=[copy.deepcopy(self.history[1])]
+                self.active_player=[copy.deepcopy(self.history[0])]
                 util += self.cfr(self.card_state,self.history,self.player, [[1, 1], [1, 1]])  # 传入每名玩家的牌的状态,历史记录和到达这个节点的概率
             print("Average game value:" + str(util / iterations))
-        #    for key, value in self.nodeMap.items():
-        #        print('{key}:{value}'.format(key=key, value=value.getAverageStrategy()))
+            for key, value in self.nodeMap.items():
+                print('{key}:{value}'.format(key=key, value=value.getAverageStrategy()))
 
-        def cfr(self,card,history,player, p):
+        def cfr(self,card,history,player,p):
             #print(self.visited_action)
-            if card[player]==[]:
+            if self.card_state[player]==[]:
                 self.actions=[0]
             else:
                 self.action_update(player)
-            a_set=[]
+            actions=[]
             for i in self.actions:
-                a_set.append(i)
-            actions=a_set
+                actions.append(i)
+            #actions=a_set
 
             index=self.players_init.index(player)
-            print("$$$"+str(actions))
-            print(player)
-            print("!!!!!!")
+            print("now playing player:",player)
+            print("now available actions:"+str(actions))
+
             #index = self.play_order.index(player)
             opponent1 =self.players_init[(index+1)%4]
-
             partner = self.players_init[(index+2)%4]
             opponent2 = self.players_init[(index+3)%4]
+
             if self.is_play_out(player, partner, opponent1, opponent2):
-                print(self.reward)
+                print("rewards:",self.reward)
                 return self.reward[player]
 
             ca=[str(i) for i in card[player]]
             his=[str(i) for i in history[2]]
             infoSet = "".join(ca)+" "+"".join(his)
-        #    print(str(infoSet))
+            print("now infoset:",infoSet)
             node = self.nodeMap.get(infoSet)
+
             if node == None:
-                node = self.Node(actions)  #infoSet下可行的行动
+                node = self.Node(len(actions))  #infoSet下可行的行动
                 node.infoSet = infoSet
                 self.nodeMap[infoSet] = node
+            else:
+                print("There already has one infoset in the map!!!",infoSet,node.strategy)
             pb=0
             if player == self.teams[0][0]:
                 pb = copy.deepcopy(p[0][0])
@@ -464,39 +522,30 @@ class MCCFR:
                 pb = copy.deepcopy(p[0][1])
             elif player == self.teams[1][1]:
                 pb = copy.deepcopy(p[1][1])
+
+            if node.num!=len(actions):
+                print("The node's actions is not same!",node.strategy,actions)
+                exit()
             strategy = node.getStrategy(pb)
-        #    print(strategy)
 
             util = [0.0 for i in range(len(actions))]
 
             nodeUtil = 0
 
-            print(self.card_state)
             for i in range(len(actions)):
-                print("run "+str(i))
+                print("run "+str(i+1)+"/"+str(len(actions)))
                 if i>0:
                     index=len(self.history[2])%4
-                    player=self.players_init[(index+3)%4]    #the player after recovery
+                    player=self.players_init[(index+3)%4]    #BCDA  the player after recovery
                 l=len(self.card_state[player])
                 print("player "+str(player)+" plays "+str(actions[i]))
                 self.card_update(actions[i],player)    #card state update
                 print("*******")
-                while len(self.card_state[player])==l and actions[i]!=0:
-                    print("Error!!!")
-                    action0 = list(str(actions[i]))
-                    state = [str(i) for i in self.card_state[player]]
-                    if self.is_subset(action0, state):
-                        for m in action0:
-                            self.card_state[player].remove(int(m))
-                 #   self.card_state[player].remove(actions[i])
-                    print(self.card_state[player])
 
-                print(self.card_state)
-                print(type(i))
+                if l==len(self.card_state[player]) and actions[i]!=0:
+                    print("states are not updated!!!")
+                    exit()
                 self.history_update(actions[i],player)   #history update
-                print(history)
-##['A', 4, [1, 2, 3, 4, 5, 0, 0, 0, 2, 3, 4, 5, 0, 0, 0, 1, 3, 5, 0, 0, 0, 1, 2, 3, 4, 0, 0]]
-
 
                 if player == self.teams[0][0]:         #update probability
                     p[0][0] = pb*strategy[i]
@@ -507,30 +556,32 @@ class MCCFR:
                 elif player == self.teams[1][1]:
                     p[1][1]=pb*strategy[i]
 
-
+                print("pro of this item complishing:  ",p)
 
                 index=self.players_init.index(player)
                 player=self.players_init[(index+1)%4]         #player update
 
-                util[i] = -1*self.cfr(card,history,player, p)
-                print(util[i])
+                util[i] = -1*self.cfr(card,history,player, p)   #recursion
+
+                print("the value of this action",util[i])
                 nodeUtil += strategy[i] * util[i]
 
                 #traceback
 
-                print("ima "+str(player))
-                print("ima history:"+str(self.history[2]))
-                print(actions)
-                print(i)
+                index=len(self.history[2])%4
+                player=self.players_init[(index+2)%4]       #BCDA      加testcase
+
+                print("recovery to player:",player)
                 if len(self.history[2])>0:
-                    index=len(self.history[2])%4
                     h=self.history[2].pop(-1)
                     #self.visited_action.append(h)
                     if h>0:
-                        player=self.players_init[(index+2)%4]
-                        print("player "+str(player)+" adds "+str(h))
+                        while h>10:
+                            self.card_state[player].append(h%10)
+                            h=h//10
                         self.card_state[player].append(h)
                         self.card_state[player].sort()
+                        print("recovery to state: ",self.card_state)
                 if len(self.active_action)>1:
                     self.active_action.pop(-1)
                     self.history[1]=self.active_action[-1]
@@ -542,21 +593,34 @@ class MCCFR:
                         self.active_player.pop(-1)
                     self.history[0]=''
                     self.history[1]=0
-                print(self.history)
-                #print("active action:"+str(self.active_action)+"active player:"+str(self.active_player))
+                print("recovery to active action set:",self.active_action)
+                print("recovery to active player set:",self.active_player)
+                print("recovery to history:",self.history)
+
+                if strategy[i]>0:
+                    if player == self.teams[0][0]:         #update probability
+                        p[0][0] /= strategy[i]
+                    elif player == self.teams[1][0]:
+                        p[1][0]/=strategy[i]
+                    elif player == self.teams[0][1]:
+                        p[0][1]/=strategy[i]
+                    elif player == self.teams[1][1]:
+                        p[1][1]/=strategy[i]
+                print("recovery to probability:",p)
 
             for i in range(len(actions)):
                 regret = util[i] - nodeUtil
                 pro = 1
                 x=len(p)
                 y=len(p[0])
-
                 for j in range(x):
                     for k in range(y):
                         if self.teams[j][k] != player:
+                            #if p[j][k]>0:
                             pro *= p[j][k]
-                node.regretSum[infoSet][i] += pro * regret
-            print("nodeutil"+str(nodeUtil))
+                node.regretSum[i] += pro * regret
+            print("this node's util is:"+str(nodeUtil))
+            print("node:",node.infoSet,node.strategy)
             self.nodeMap[infoSet] = node
             return nodeUtil
 
@@ -570,7 +634,7 @@ class MCCFR:
             self.history_init = copy.deepcopy(self.poker.history)           ##初始历史
             self.players_init = copy.deepcopy(poker.players)                ##玩家列表顺序
 
-            iterations = 10000
+            iterations = 1
             self.train(iterations)
             ca=[str(i) for i in self.state_init[self.player_init]]   #进行模拟玩家的牌
             his=[str(i) for i in self.history_init[2]]
@@ -586,13 +650,26 @@ class MCCFR:
             for i in range(len(strategy)):
                 sum += strategy[i]
                 if p <= sum:
+                    print("-----------------------over-----------------------")
                     return self.poker.possible_actions[i]
 
         def __str__(self):
             return "AI Player"
+##random 0.625
+##card={1,2}
+##MCCFR iterations=1   winning rate=0.644
+##MCCFR iterations=10  winning rate=
+##MCFR iterations=100 winning rate=
 
+##card={1,2,3,4,5}
+##MCCFR iterations=1 winning rate=
+##MCCFR iterations=100 winning rate=
+
+class TestMathFunc(unittest.TestCase):
+    def Poker_history_update_test(self):
+        pass
 if __name__=="__main__":
-    iterations=1
+    iterations=1000
     sum=0
     for i in range(iterations):
         print("TURN "+str(i+1))
@@ -600,4 +677,5 @@ if __name__=="__main__":
         poker = Poker()
         sum+=poker.play(poker)
         print(sum)
+    print("the winning rate")
     print(sum/iterations)
