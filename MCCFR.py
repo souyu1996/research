@@ -11,8 +11,6 @@ class Poker:
         self.teams=[['A','C'],['B','D']]
 
     def init_game(self):
-    #    if poker.history[2]!=None:
-    #        self.state
         card = [i for i in self.cards] * self.num_per_color
         self.state = {}
         self.player_state={i:False for i in self.players}
@@ -34,7 +32,6 @@ class Poker:
 
     def state_update(self,action,player):
         if self.state[player] == []:
-            #    print(self.player_state)
             return
         action0 = list(str(action))
         state = [str(i) for i in self.state[player]]
@@ -134,11 +131,7 @@ class Poker:
         return self.players[index]
 
     def play(self,poker,plaay,ai):
-        #player=self.init_player()
         self.init_game()
-       #  pl={}
-       # # ai=MCCFR(poker)
-       #  ai_player=random.choice(self.players)  #select ai player
         for i in self.players:
             index=self.players.index(i)
             pl[i]=plaay[index]
@@ -154,19 +147,12 @@ class Poker:
                 action=0
             else:
                 action=pl[player].get_action()
-            #action=self.possible_actions[action]
             self.action_print(action, player)
 
             self.update(action,player)   #update the state
 
             if self.is_win(player):
                 return self.reward[ai]
-      #          if self.reward[ai_player]>0:
-      #              return 1
-      #          else:
-      #              return 0
-      #          print("Player "+str(player)+"'s team wins!")
-                break
 
     def is_win(self,player):
         index = self.players.index(player)
@@ -232,14 +218,11 @@ class MCCFR:
         class Node:
             def __init__(self,num):  #actions
                 self.infoSet = None
-
                 self.num=num
                 self.regretSum = [0 for i in range(self.num)]
                 self.strategy = [0 for i in range(self.num)]
                 self.strategySum = [0 for i in range(self.num)]
                 self.count=0
-            #    self.possible_actions=copy.deepcopy(actions)
-            #    self.num=len(self.possible_actions)
 
             def getStrategy(self, weight):
                 normalizingSum = 0
@@ -258,7 +241,6 @@ class MCCFR:
                 return self.strategy
 
             def getAverageStrategy(self):  # 根据每个信息集汇总还是根据整个游戏的发生概率？
-                #    action_num=len(self.possible_actions)
                 avgStrategy = [0 for i in range(self.num)]
                 normalizingSum = 0
                 print("strategy sum:",self.strategySum)
@@ -274,20 +256,16 @@ class MCCFR:
         def card_init(self):  ##发牌
             states = {}
             self.history = self.history_init
-            #history=self.history[2]
             self.player_state =self.player_state_init
             self.play_order = self.players_init
             player_set=[]
             self.state=self.state_init
             self.player=self.player_init
-            #pl=copy.deepcopy(self.players)
-    #        print(self.state)
             for i in self.play_order:  # 发牌对象
                 if self.state[i]!=[] and i != self.player:
                     player_set.append(i)
                 if self.state[i]==[]:
                     states[i]=[]
-        #    print(pl)
             states[self.player] = self.state[self.player]
             card = [i for i in self.poker.cards] * self.poker.num_per_color
             print(self.history[2])
@@ -314,8 +292,6 @@ class MCCFR:
                 else:
                     states[p]=[i]
                 player_num[p]+=1
-        #    print(pl)
-        #    print(self.player_state)
             for pla in self.play_order:
                 if pla in self.play_order:
                     states[pla].sort()
@@ -361,11 +337,7 @@ class MCCFR:
                     print('{key}:{value}'.format(key=key, value=value.getAverageStrategy()))
                     print("regret sum:",value.regretSum)
 
-       # def prereward(self,player):
-
-
         def cfr(self,t, card, history, player, p,s):
-            # print(self.visited_action)
             if self.card_state[player] == []:
                 actions = [0]
             else:
@@ -426,10 +398,6 @@ class MCCFR:
                 ss+=strategy[i]
                 if ss>prob:
                     a=i
-
-            #util = [0.0 for i in range(len(actions))]
-
-            #nodeUtil = 0.0
 
             l = len(self.card_state[player])
             print("player " + str(player) + " plays " + str(actions[a]))
@@ -524,98 +492,6 @@ class MCCFR:
             print("node:", node.infoSet, node.getAverageStrategy())
             self.nodeMap[infoSet] = node
             return nodeUtil,tail*pb
-            # for i in range(len(actions)):
-            #     print("run " + str(i + 1) + "/" + str(len(actions)))
-            #     # if i > 0:
-            #     #     index = len(self.history[2]) % 4
-            #     #     player = self.players_init[(index + 3) % 4]  # BCDA  the player after recovery
-            #     l = len(self.card_state[player])
-            #     print("player " + str(player) + " plays " + str(actions[i]))
-            #     self.poker.state_update(actions[i], player)  # card state update
-            #     print("*******")
-            #
-            #     if l == len(self.card_state[player]) and actions[i] != 0:
-            #         print("states are not updated!!!")
-            #         exit()
-            #     self.history_update(actions[i], player)  # history update
-            #
-            #     if player == self.poker.teams[0][0]:  # update probability
-            #         p[0][0] = pb * strategy[i]
-            #     elif player == self.poker.teams[1][0]:
-            #         p[1][0] = pb * strategy[i]
-            #     elif player == self.poker.teams[0][1]:
-            #         p[0][1] = pb * strategy[i]
-            #     elif player == self.poker.teams[1][1]:
-            #         p[1][1] = pb * strategy[i]
-            #
-            #     print("pro of this item complishing:  ", p)
-            #
-            #     index = self.players_init.index(player)
-            #     player = self.players_init[(index + 1) % 4]  # player update
-            #
-            #     util[i] = -1 * self.cfr(card, history, player, p,s)  # recursion
-            #
-            #     print("the value of this action", util[i])
-            #     nodeUtil += strategy[i] * util[i]
-            #
-                # # traceback
-                #
-                # print("now history:",self.poker.history)
-                # print("now playing list:",self.players_init)
-                # player = self.players_init[index]  # BCDA      加testcase
-                #
-                # print("recovery to player:", player)
-                # if len(self.history[2]) > 0:
-                #     h = self.history[2].pop(-1)
-                #     # self.visited_action.append(h)
-                #     if h > 0:
-                #         while h > 10:
-                #             self.card_state[player].append(h % 10)
-                #             h = h // 10
-                #         self.card_state[player].append(h)
-                #         self.card_state[player].sort()
-                #         print("recovery to state: ", self.card_state)
-                # if len(self.active_action) > 1:
-                #     self.active_action.pop(-1)
-                #     self.history[1] = self.active_action[-1]
-                #     self.active_player.pop(-1)
-                #     self.history[0] = self.active_player[-1]
-                # else:
-                #     if len(self.active_action) == 1:
-                #         self.active_action.pop(-1)
-                #         self.active_player.pop(-1)
-                #     self.history[0] = ''
-                #     self.history[1] = 0
-                # print("recovery to active action set:", self.active_action)
-                # print("recovery to active player set:", self.active_player)
-                # print("recovery to history:", self.history)
-                #
-                # if strategy[i] > 0:
-                #     if player == self.poker.teams[0][0]:  # update probability
-                #         p[0][0] /= strategy[i]
-                #     elif player == self.poker.teams[1][0]:
-                #         p[1][0] /= strategy[i]
-                #     elif player == self.poker.teams[0][1]:
-                #         p[0][1] /= strategy[i]
-                #     elif player == self.poker.teams[1][1]:
-                #         p[1][1] /= strategy[i]
-                # print("recovery to probability:", p)
-
-            # for i in range(len(actions)):
-            #     regret = util[i] - nodeUtil
-            #     pro = 1
-            #     x = len(p)
-            #     y = len(p[0])
-            #     for j in range(x):
-            #         for k in range(y):
-            #             if self.poker.teams[j][k] != player:
-            #                 # if p[j][k]>0:
-            #                 pro *= p[j][k]
-            #     node.regretSum[i] += pro * regret
-            # print("this node's util is:" + str(nodeUtil))
-            # print("node:", node.infoSet, node.strategy)
-            # self.nodeMap[infoSet] = node
-            # return nodeUtil
 
         def save_data(self):
             file=open("data.txt","a")
@@ -655,22 +531,14 @@ class MCCFR:
             sum = 0
             print(actions)  #可能的行动集
 
-
-
             for i in range(len(strategy)):
                 sum += strategy[i]
                 if p <= sum:
                     print("-----------------------over-----------------------")
                     return actions[i]
 
-
         def __str__(self):
             return "AI Player"
-
-# def save_data(filename,data):
-#     fileObject = open(filename, 'w')
-#     fileObject.write(str(data))
-#     fileObject.close()
 
 def read_data(filename):
     file=open(filename,"r")
