@@ -40,20 +40,6 @@ class KuhnPoker:
                     return -2
         return 0
 
-    # def run(self,players):
-    #     play_list=list(range(len(players)))
-    #     random.shuffle(play_list)
-    #     while 1:    #此处可改成step函数
-    #         player=play_list[0]
-    #         rew=self.is_end(self.history,play_list)
-    #         if rew!=0:
-    #             return player,rew
-    #         a=players[player].get_action(self.history,self.cards)
-    #         #update history
-    #         self.update(a)
-    #         #update player
-    #         play_list=play_list[::-1]   #改用queue管理
-
     def update(self,action):
         self.history+=str(action)
 
@@ -68,17 +54,8 @@ class Player:
         self.ACTIONS=["p","b"]
         self.__name=name
         pass
-
-    # def get_action(self,hisotry):
-    #     pass
-
     def get_name(self):
         print("The player's name is ",self.__name,"!")
-
-# class RandomPlayer(Player):
-#     def get_action(self,history,card):
-#         a=random.choice(range(self.NUM_ACTIONS))
-#         return self.ACTIONS[a]
 
 class CFRPlayer(Player):
     def __init__(self,name=None):
@@ -116,30 +93,11 @@ class CFRPlayer(Player):
                 self.util+=u
                 game.reshuffle()
 
-        # infoSet = str(self.cards[self.player]) + self.history
-        # node = self.nodeMap.get(infoSet)
-        # strategy=node.getStrategy(1)
-        # print("strategy:",strategy)
-        # pro=random.random()
-        # tot=0
-        # for i in range(self.NUM_ACTIONS):
-        #     tot+=strategy[i]
-        #     if pro<tot:
-        #         return self.ACTIONS[i]
-
     def get_avgstr(self):
         print("Average game value:" + str(self.util / iterations))
 
         for key in sorted(self.nodeMap.keys()):
             print('{key}:{value}'.format(key=key, value=self.nodeMap[key].getAverageStrategy()))
-
-    # def sample(self,strategy):
-    #     p=random.random()
-    #     total=0
-    #     for i in range(self.NUM_ACTIONS):
-    #         total+=strategy[i]
-    #         if p<total:
-    #             return i
 
     def oscfr(self,t,i,pi,p_i,s):
         history=game.history
@@ -160,16 +118,6 @@ class CFRPlayer(Player):
         strategy=node.getStrategy()
         samstra = (np.ones(2) / 2 * self.e + (1 -self.e) * strategy) if player == i else strategy
         a=np.random.choice([0,1],p=samstra)
-        # util=[0.0 for i in range(self.NUM_ACTIONS)]
-        # nodeUtil=0
-        # for i in range(self.NUM_ACTIONS):
-        #     game.update(self.ACTIONS[i])
-        #     if player==0:
-        #         util[i]=-self.cfr([p[0]*strategy[i],p[1]])
-        #     else:
-        #         util[i]=-self.cfr([p[0],p[1]*strategy[i]])
-        #     game.withdraw()
-        #     nodeUtil+=strategy[i]*util[i]
         game.update(self.ACTIONS[a])
 
         if player==i:
@@ -232,7 +180,4 @@ if __name__=="__main__":
     game=KuhnPoker()
     iterations=pow(10,5) #
     player.play(iterations)
-    # for i in range(iterations):
-    #     player.play()
-    #     game.reshuffle()
     player.get_avgstr()
